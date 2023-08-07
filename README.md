@@ -12,6 +12,8 @@ composer require wilkques/task-pool
 
 ## How to use
 ```php
+use Wilkques\TaskPool\Contracts\TaskContract;
+
 class TaskOne implements TaskContract
 {
     public function handle()
