@@ -3,6 +3,9 @@
     "description": "task-pool",
     "type": "library",
     "license": "MIT",
+    "require": {
+        "wilkques/php-helper": "^3.0.0"
+    },
     "require-dev": {
         "phpunit/phpunit": "*"
     },
