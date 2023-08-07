@@ -1,0 +1,14 @@
+{
+    "name": "wilkques/task-pool",
+    "description": "task-pool",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Wilkques\\TaskPool\\": "src/"
+        }
+    }
+}
