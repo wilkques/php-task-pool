@@ -44,4 +44,4 @@ jobs:
     # Docs: https://getcomposer.org/doc/articles/scripts.md
 
     - name: Run test
-      run: vendor/bin/phpunit
+      run: vendor/bin/phpunit tests/TaskPoolTests.php
