@@ -1,6 +1,6 @@
 # Task Pool for PHP
 
-[![TESTS](https://github.com/wilkques/php-task-pool/actions/workflows/github-cd.yml/badge.svg)](https://github.com/wilkques/php-task-pool/actions/workflows/github-ci.yml)
+[![TESTS](https://github.com/wilkques/php-task-pool/actions/workflows/github-ci.yml/badge.svg)](https://github.com/wilkques/php-task-pool/actions/workflows/github-ci.yml)
 [![Latest Stable Version](https://poser.pugx.org/wilkques/task-pool/v/stable)](https://packagist.org/packages/wilkques/task-pool)
 [![License](https://poser.pugx.org/wilkques/task-pool/license)](https://packagist.org/packages/wilkques/task-pool)
 
