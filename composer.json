@@ -3,6 +3,9 @@
     "description": "task-pool",
     "type": "library",
     "license": "MIT",
+    "require-dev": {
+        "phpunit/phpunit": "*"
+    },
     "autoload": {
         "psr-4": {
             "Wilkques\\TaskPool\\": "src/"
