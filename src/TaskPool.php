@@ -110,7 +110,7 @@ class TaskPool
      */
     public function sharedMemorySize($memorySize = 1024)
     {
-        $this->sharedMemorySize = count($this->tasks) * $this->memory($memorySize);
+        $this->sharedMemorySize = count($this->getTasks()) * $this->memory($memorySize);
 
         return $this;
     }
