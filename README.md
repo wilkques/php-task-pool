@@ -20,16 +20,22 @@ class TaskOne implements TaskContract
     public function handle()
     {
         // ... do something
+
+        return $result;
     }
     
     public function resolved($result, $index)
     {
         // ... do something
+
+        return $result;
     }
     
     public function rejected(ForkRunTimeException $forkRunTimeException)
     {
         // ... do something
+
+        return $forkRunTimeException;
     }
 }
 
@@ -38,16 +44,22 @@ class TaskTwo implements TaskContract
     public function handle()
     {
         // ... do something
+
+        return $result;
     }
     
     public function resolved($result, $index)
     {
         // ... do something
+
+        return $result;
     }
     
     public function rejected(ForkRunTimeException $forkRunTimeException)
     {
         // ... do something
+
+        return $forkRunTimeException;
     }
 }
 
@@ -56,18 +68,22 @@ class TaskThree implements TaskContract
     public function handle()
     {
         // ... do something
+
+        return $result;
     }
     
     public function resolved($result, $index)
     {
         // ... do something
+
+        return $result;
     }
     
     public function rejected(ForkRunTimeException $forkRunTimeException)
     {
         // ... do something
 
-        return 
+        return $forkRunTimeException;
     }
 }
 
