@@ -11,32 +11,49 @@ class TaskPoolTests extends TestCase
     /** @var TaskPool */
     protected $taskPool;
 
-    /** @var TaskContract */
+    /** @var \PHPUnit\Framework\MockObject\MockObject */
     protected $taskMockOne;
 
-    /** @var TaskContract */
+    /** @var \PHPUnit\Framework\MockObject\MockObject */
     protected $taskMockTwo;
 
-    /** @var TaskContract */
+    /** @var \PHPUnit\Framework\MockObject\MockObject */
     protected $taskMockThree;
 
     public function setUp(): void
     {
         parent::setUp();
 
+        $this->init();
+    }
+
+    private function init()
+    {
         $this->taskPool = new TaskPool;
 
         $this->taskMockOne = $this->getMockBuilder(TaskContract::class)->getMock();
 
-        $this->taskMockOne->method('handle')->willReturn('task1');
-
         $this->taskMockTwo = $this->getMockBuilder(TaskContract::class)->getMock();
-
-        $this->taskMockTwo->method('handle')->willReturn('task2');
 
         $this->taskMockThree = $this->getMockBuilder(TaskContract::class)->getMock();
 
+        $this->taskMockOne->method('handle')->willReturn('task1');
+
+        $this->taskMockTwo->method('handle')->willReturn('task2');
+
         $this->taskMockThree->method('handle')->willReturn('task3');
+
+        $this->taskMockOne->method('resolved')->willReturnCallback(function ($result, $index) {
+            return $result;
+        });
+
+        $this->taskMockTwo->method('resolved')->willReturnCallback(function ($result, $index) {
+            return $result;
+        });
+
+        $this->taskMockThree->method('resolved')->willReturnCallback(function ($result, $index) {
+            return $result;
+        });
     }
 
     public function testHandle()

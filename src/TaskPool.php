@@ -43,13 +43,8 @@ class TaskPool
     {
         $this->tasks($tasks)->setOptions(
             array_merge(array(
-                'rejected'  => function (ForkRunTimeException $exception) {
-                    return $exception;
-                },
-                'resolved'  => function ($result, $index) {
-                    return $result;
-                },
-                'memory'    => 1024, // Allocate 1KB of shared memory space for each task
+                // Allocate 1KB of shared memory space for each task
+                'memory'    => 1024,
             ), $options)
         );
     }
@@ -261,25 +256,28 @@ class TaskPool
             $pid = pcntl_fork();
 
             if ($pid == -1) {
-                $rejected = $this->getOption('rejected');
+                $rejected = $task->rejected($this->forkRunTimeException("Unable to fork"));
 
-                $forkRunTimeException = $this->forkRunTimeException("Unable to fork");
-
-                if (!$rejected or !$rejected instanceof \Exception) {
-                    throw $forkRunTimeException;
+                if ($rejected instanceof \Exception) {
+                    throw $rejected;
                 }
 
-                throw $rejected($forkRunTimeException);
+                throw $this->forkRunTimeException("Rejected return must be Exception");
             }
 
             if ($pid == 0) {
-                $result = $this->executeTask($task);
+                // Executes a task and returns the result
+                if (!$result = $task->handle()) {
+                    $result = null;
+                }
 
-                sem_acquire($this->getSemaphoreId()); // Acquire the semaphore to ensure synchronization of shared memory access
+                // Acquire the semaphore to ensure synchronization of shared memory access
+                sem_acquire($this->getSemaphoreId());
 
                 $this->writeResultToSharedMemory($i, $result);
 
-                sem_release($this->getSemaphoreId()); // Release the semaphore
+                // Release the semaphore
+                sem_release($this->getSemaphoreId());
 
                 exit(0);
             }
@@ -301,32 +299,18 @@ class TaskPool
             usleep(100000);
         }
 
-        $this->collectResults();
-
-        $this->cleanup();
+        $this->collectResults()->cleanup();
 
         return $this;
     }
 
     /**
-     * Executes a task and returns the result
-     * @param \Wilkques\TaskPool\Contracts\TaskContract $task The task to be executed
-     * 
-     * @return mixed The result of the task execution
-     */
-    private function executeTask($task)
-    {
-        // Perform the actual task logic here and return the result
-        return $task->handle();
-    }
-
-    /**
      * Collects and prints the results of the task pool
+     * 
+     * @return static
      */
     private function collectResults()
     {
-        $resolved = $this->getOption('resolved');
-
         $sharedMemorySize = $this->memory();
 
         $i = 0;
@@ -336,10 +320,12 @@ class TaskPool
 
             $result = rtrim($result, "\0");
 
-            $this->setResult($resolved($result, $index), $index);
+            $this->setResult($task->resolved($result, $index), $index);
 
             $i++;
         }
+
+        return $this;
     }
 
     /**
@@ -365,6 +351,8 @@ class TaskPool
 
     /**
      * Cleans up the shared memory and semaphore resources
+     * 
+     * @return static
      */
     private function cleanup()
     {
@@ -373,5 +361,7 @@ class TaskPool
         shmop_close($this->getSharedMemoryId());
 
         sem_remove($this->getSemaphoreId());
+
+        return $this;
     }
 }

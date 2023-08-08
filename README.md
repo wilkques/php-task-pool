@@ -13,10 +13,21 @@ composer require wilkques/task-pool
 ## How to use
 ```php
 use Wilkques\TaskPool\Contracts\TaskContract;
+use Wilkques\TaskPool\Exceptions\ForkRunTimeException;
 
 class TaskOne implements TaskContract
 {
     public function handle()
+    {
+        // ... do something
+    }
+    
+    public function resolved($result, $index)
+    {
+        // ... do something
+    }
+    
+    public function rejected(ForkRunTimeException $forkRunTimeException)
     {
         // ... do something
     }
@@ -28,6 +39,16 @@ class TaskTwo implements TaskContract
     {
         // ... do something
     }
+    
+    public function resolved($result, $index)
+    {
+        // ... do something
+    }
+    
+    public function rejected(ForkRunTimeException $forkRunTimeException)
+    {
+        // ... do something
+    }
 }
 
 class TaskThree implements TaskContract
@@ -35,6 +56,18 @@ class TaskThree implements TaskContract
     public function handle()
     {
         // ... do something
+    }
+    
+    public function resolved($result, $index)
+    {
+        // ... do something
+    }
+    
+    public function rejected(ForkRunTimeException $forkRunTimeException)
+    {
+        // ... do something
+
+        return 
     }
 }
 
@@ -65,3 +98,5 @@ $taskPool->handle();
 $taskPool->results();
 ```
 
+## Options
+`memory` memory size
