@@ -98,9 +98,19 @@ class TaskPool
      * 
      * @return int
      */
-    public function memory($memory = 1024)
+    public function getMemory($memory = 1024)
     {
         return $this->getOption('memory', $memory);
+    }
+
+    /**
+     * @param int $memory
+     * 
+     * @return static
+     */
+    public function memory($memory = 1024)
+    {
+        return $this->setOption('memory', $memory);
     }
 
     /**
@@ -110,7 +120,7 @@ class TaskPool
      */
     public function sharedMemorySize($memorySize = 1024)
     {
-        $this->sharedMemorySize = count($this->getTasks()) * $this->memory($memorySize);
+        $this->sharedMemorySize = count($this->getTasks()) * $this->getMemory($memorySize);
 
         return $this;
     }
@@ -176,6 +186,7 @@ class TaskPool
 
     /**
      * Writes the result to the shared memory at the specified index
+     * 
      * @param int $index The index of the task
      * @param string $result The result to be written
      * 
@@ -183,11 +194,27 @@ class TaskPool
      */
     private function writeResultToSharedMemory($index, $result)
     {
-        $offset = $index * $this->memory();
+        $offset = $index * $this->getMemory();
 
         shmop_write($this->getSharedMemoryId(), $result, $offset);
 
         return $this;
+    }
+
+    /**
+     * Reads the result to the shared memory at the specified index
+     * 
+     * @param int $index The index of the task
+     * 
+     * @return string
+     */
+    public function read($index)
+    {
+        $sharedMemorySize = $this->getMemory();
+
+        $result = shmop_read($this->getSharedMemoryId(), $index * $sharedMemorySize, $sharedMemorySize);
+
+        return rtrim($result, "\0");
     }
 
     /**
@@ -267,7 +294,7 @@ class TaskPool
 
             if ($pid == 0) {
                 // Executes a task and returns the result
-                if (!$result = $task->handle()) {
+                if (!$result = $task->handle($this)) {
                     $result = null;
                 }
 
@@ -311,14 +338,10 @@ class TaskPool
      */
     private function collectResults()
     {
-        $sharedMemorySize = $this->memory();
-
         $i = 0;
 
         foreach ($this->getTasks() as $index => $task) {
-            $result = shmop_read($this->getSharedMemoryId(), $i * $sharedMemorySize, $sharedMemorySize);
-
-            $result = rtrim($result, "\0");
+            $result = $this->read($index);
 
             $this->setResult($task->resolved($result, $index), $index);
 

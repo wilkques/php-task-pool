@@ -17,9 +17,11 @@ interface TaskContract
     /**
      * Execution failed.
      * 
+     * @param \Wilkques\TaskPool\Exceptions\ForkRunTimeException $forkRunTimeException
+     * 
      * @return \Exception
      */
-    public function rejected();
+    public function rejected($forkRunTimeException);
 
     /**
      * Running...
