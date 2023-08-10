@@ -6,7 +6,7 @@ use Wilkques\TaskPool\Exceptions\ForkRunTimeException;
 
 class TaskPool
 {
-    /** @var array */
+    /** @var array<Wilkques\TaskPool\Contracts\TaskContract> */
     private $tasks;
 
     /** @var resource|false|Shmop */
@@ -229,7 +229,7 @@ class TaskPool
     }
 
     /**
-     * @return array
+     * @return array<\Wilkques\TaskPool\Contracts\TaskContract>
      */
     public function getTasks()
     {
@@ -237,7 +237,7 @@ class TaskPool
     }
 
     /**
-     * @param \Wilkques\TaskPool\Contracts $task
+     * @param \Wilkques\TaskPool\Contracts\TaskContract $task
      * @param string|int $index
      * 
      * @return static
@@ -293,7 +293,7 @@ class TaskPool
 
             if ($pid == 0) {
                 // Executes a task and returns the result
-                if (!$result = $task->handle($this)) {
+                if (!$result = $task->handle()) {
                     $result = null;
                 }
 
