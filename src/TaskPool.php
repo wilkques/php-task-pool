@@ -19,10 +19,10 @@ class TaskPool
     private $semaphoreId;
 
     /** @var array */
-    protected $options;
+    protected $options = array();
 
     /** @var array */
-    protected $results;
+    protected $results = array();
 
     /**
      * TaskPool constructor.
@@ -43,8 +43,7 @@ class TaskPool
     {
         $this->tasks($tasks)->setOptions(
             array_merge(array(
-                // Allocate 1KB of shared memory space for each task
-                'memory'    => 1024,
+                'memory'    => 1024, // Allocate 1KB of shared memory space for each task
             ), $options)
         );
     }
@@ -77,7 +76,7 @@ class TaskPool
      */
     public function setOption($key, $value)
     {
-        $this->options[$key] = $value;
+        $this->options = data_set($this->options, $key, $value);
 
         return $this;
     }
@@ -96,21 +95,21 @@ class TaskPool
     /**
      * @param int $memory
      * 
-     * @return int
-     */
-    public function getMemory($memory = 1024)
-    {
-        return $this->getOption('memory', $memory);
-    }
-
-    /**
-     * @param int $memory
-     * 
      * @return static
      */
     public function memory($memory = 1024)
     {
         return $this->setOption('memory', $memory);
+    }
+
+    /**
+     * @param int $memory
+     * 
+     * @return int
+     */
+    public function getMemory($memory = 1024)
+    {
+        return $this->getOption('memory', $memory);
     }
 
     /**
