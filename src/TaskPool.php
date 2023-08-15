@@ -43,7 +43,8 @@ class TaskPool
     {
         $this->tasks($tasks)->setOptions(
             array_merge(array(
-                'memory'    => 1024, // Allocate 1KB of shared memory space for each task
+                'memory'    => 1024,    // Allocate 1KB of shared memory space for each task
+                'timeout'   => 100000,  // set timeout microseconds default 100000
             ), $options)
         );
     }
@@ -130,6 +131,14 @@ class TaskPool
     public function getSharedMemorySize()
     {
         return $this->sharedMemorySize;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTimeout()
+    {
+        return $this->getOption('timeout', 100000);
     }
 
     /**
@@ -322,7 +331,7 @@ class TaskPool
                 unset($processes[$pid]);
             }
 
-            usleep(100000);
+            usleep($this->getTimeout());
         }
 
         $this->collectResults()->cleanup();
