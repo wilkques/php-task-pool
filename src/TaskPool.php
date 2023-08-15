@@ -349,7 +349,7 @@ class TaskPool
         $i = 0;
 
         foreach ($this->getTasks() as $index => $task) {
-            $result = $this->read($index);
+            $result = $this->read($i);
 
             $this->setResult($task->resolved($result, $index), $index);
 
