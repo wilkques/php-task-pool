@@ -115,4 +115,5 @@ $taskPool->results();
 ```
 
 ## Options
-`memory` memory size
+`memory` memory size default 1024
+`timeout` set timeout microseconds default 100000
