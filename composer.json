@@ -4,7 +4,7 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "wilkques/php-helper": "^3.0.0"
+        "wilkques/php-helper": "^5.0.0"
     },
     "require-dev": {
         "phpunit/phpunit": "*"

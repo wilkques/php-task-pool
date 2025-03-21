@@ -2,6 +2,7 @@
 
 namespace Wilkques\TaskPool;
 
+use Wilkques\Helpers\Arrays;
 use Wilkques\TaskPool\Exceptions\ForkRunTimeException;
 
 class TaskPool
@@ -45,6 +46,9 @@ class TaskPool
             array_merge(array(
                 'memory'    => 1024,    // Allocate 1KB of shared memory space for each task
                 'timeout'   => 100000,  // set timeout microseconds default 100000
+                'log'       => function ($message) {
+                    error_log($message);
+                },
             ), $options)
         );
     }
@@ -77,7 +81,7 @@ class TaskPool
      */
     public function setOption($key, $value)
     {
-        $this->options = data_set($this->options, $key, $value);
+        $this->options = Arrays::set($this->options, $key, $value);
 
         return $this;
     }
@@ -90,7 +94,7 @@ class TaskPool
      */
     public function getOption($key, $default = null)
     {
-        return data_get($this->getOptions(), $key, $default);
+        return Arrays::get($this->getOptions(), $key, $default);
     }
 
     /**
@@ -142,6 +146,27 @@ class TaskPool
     }
 
     /**
+     * Log a message using configured log callback.
+     *
+     * @param string $message
+     * @return void
+     */
+    protected function log(string $message)
+    {
+        $logFunction = $this->getOption('log');
+
+        if (is_callable($logFunction)) {
+            $logFunction($message);
+
+            return $this;
+        }
+
+        error_log($message);
+
+        return $this;
+    }
+
+    /**
      * @param string $message
      * 
      * @return ForkRunTimeException
@@ -159,6 +184,10 @@ class TaskPool
     private function sharedMemoryId()
     {
         $this->sharedMemoryId = shmop_open(ftok(__FILE__, 't'), 'c', 0644, $this->getSharedMemorySize());
+
+        if ($this->sharedMemoryId === false) {
+            throw $this->forkRunTimeException("Unable to open shared memory segment.");
+        }
 
         return $this;
     }
@@ -180,6 +209,9 @@ class TaskPool
     {
         $this->semaphoreId = sem_get(ftok(__FILE__, 't'));
         // sem_acquire($this->semaphoreId);
+        if ($this->semaphoreId === false) {
+            throw $this->forkRunTimeException("Unable to get semaphore.");
+        }
 
         return $this;
     }
@@ -204,7 +236,11 @@ class TaskPool
     {
         $offset = $index * $this->getMemory();
 
-        shmop_write($this->getSharedMemoryId(), $result, $offset);
+        $bytesWritten = shmop_write($this->getSharedMemoryId(), $result, $offset);
+
+        if ($bytesWritten === false) {
+            $this->log("Failed to write result to shared memory at index $index.");
+        }
 
         return $this;
     }
@@ -220,7 +256,7 @@ class TaskPool
     {
         $sharedMemorySize = $this->getMemory();
 
-        $result = shmop_read($this->getSharedMemoryId(), $index * $sharedMemorySize, $sharedMemorySize);
+        $result = shmop_read($this->getSharedMemoryId(), ($index * $sharedMemorySize), $sharedMemorySize);
 
         return rtrim($result, "\0");
     }
@@ -301,20 +337,28 @@ class TaskPool
             }
 
             if ($pid == 0) {
-                // Executes a task and returns the result
-                if (!$result = $task->handle()) {
-                    $result = null;
+                try {
+                    // Executes a task and returns the result
+                    if (!$result = $task->handle()) {
+                        $result = null;
+                    }
+
+                    // Acquire the semaphore to ensure synchronization of shared memory access
+                    sem_acquire($this->getSemaphoreId());
+
+                    $this->writeResultToSharedMemory($i, $result);
+
+                    // Release the semaphore
+                    sem_release($this->getSemaphoreId());
+
+                    exit(0);
+                } catch (\Exception $e) {
+                    sem_acquire($this->getSemaphoreId());
+
+                    $this->writeResultToSharedMemory($i, 'ERROR: ' . $e->getMessage());
+
+                    sem_release($this->getSemaphoreId());
                 }
-
-                // Acquire the semaphore to ensure synchronization of shared memory access
-                sem_acquire($this->getSemaphoreId());
-
-                $this->writeResultToSharedMemory($i, $result);
-
-                // Release the semaphore
-                sem_release($this->getSemaphoreId());
-
-                exit(0);
             }
 
             $processes[$pid] = true;
@@ -387,11 +431,15 @@ class TaskPool
      */
     private function cleanup()
     {
-        shmop_delete($this->getSharedMemoryId());
+        if ($this->getSharedMemoryId()) {
+            shmop_delete($this->getSharedMemoryId());
 
-        shmop_close($this->getSharedMemoryId());
+            shmop_close($this->getSharedMemoryId());
+        }
 
-        sem_remove($this->getSemaphoreId());
+        if ($this->getSemaphoreId()) {
+            sem_remove($this->getSemaphoreId());
+        }
 
         return $this;
     }
